@@ -2,8 +2,6 @@
 
 Plataforma de venda de ingressos de cinema. Qualquer pessoa navega o cartaz, abre um filme (elenco, gênero, duração e classificação vêm da TMDb ao vivo), escolhe sessão num calendário por sala e horário e seleciona assento num mapa em tempo real, tudo sem precisar de conta. O cadastro só é pedido no meio do checkout, depois de escolher o assento e o tipo de ingresso (inteira ou meia), antes de pagar. O pagamento é simulado (Pix ou cartão), o ingresso sai com QR code, e a portaria valida na entrada por QR ou digitando o código curto.
 
-O fluxo mudou bastante desde a primeira versão do projeto (cadastro deixou de ser obrigatório logo no início, o modelo passou a suportar várias sessões por filme, etc).
-
 ## Credenciais pré-definidas
 
 O cliente não usa credencial nenhuma, a conta é criada por ele mesmo durante o checkout. As credenciais abaixo servem só para os dois papéis internos: organizador (painel em `/organizer`) e portaria (console em `/gate`).
