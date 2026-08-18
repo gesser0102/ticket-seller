@@ -85,7 +85,7 @@ export function MoviesListPage() {
         {movies.length > 0 && (
           <div className="section-header">
             <p className="section-eyebrow">Cartaz completo</p>
-            <h2>Todos os filmes</h2>
+            <h2>Em Cartaz</h2>
           </div>
         )}
 

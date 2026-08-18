@@ -44,20 +44,31 @@ export function HeroCarousel({ movies }: { movies: MovieSummaryDto[] }) {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {slides.length > 1 && (
-        <button
-          type="button"
-          className="hero-banner-arrow hero-banner-arrow-prev"
-          onClick={() => goTo(active - 1)}
-          aria-label="Filme anterior"
-        >
-          <IconChevronDown width={18} height={18} style={{ transform: "rotate(90deg)" }} />
-        </button>
-      )}
-
       <div className="container hero-banner-inner">
         <div className="hero-banner-media">
-          <img src={current.backdropUrl ?? current.posterUrl} alt="" />
+          <div className="hero-banner-media-frame">
+            <img src={current.backdropUrl ?? current.posterUrl} alt="" />
+          </div>
+          {slides.length > 1 && (
+            <button
+              type="button"
+              className="hero-banner-arrow hero-banner-arrow-prev"
+              onClick={() => goTo(active - 1)}
+              aria-label="Filme anterior"
+            >
+              <IconChevronDown width={18} height={18} style={{ transform: "rotate(90deg)" }} />
+            </button>
+          )}
+          {slides.length > 1 && (
+            <button
+              type="button"
+              className="hero-banner-arrow hero-banner-arrow-next"
+              onClick={() => goTo(active + 1)}
+              aria-label="Próximo filme"
+            >
+              <IconChevronDown width={18} height={18} style={{ transform: "rotate(-90deg)" }} />
+            </button>
+          )}
         </div>
         <div className="hero-banner-content" key={current.id}>
           <h1>{current.title}</h1>
@@ -67,17 +78,6 @@ export function HeroCarousel({ movies }: { movies: MovieSummaryDto[] }) {
           </Link>
         </div>
       </div>
-
-      {slides.length > 1 && (
-        <button
-          type="button"
-          className="hero-banner-arrow hero-banner-arrow-next"
-          onClick={() => goTo(active + 1)}
-          aria-label="Próximo filme"
-        >
-          <IconChevronDown width={18} height={18} style={{ transform: "rotate(-90deg)" }} />
-        </button>
-      )}
     </section>
   );
 }
