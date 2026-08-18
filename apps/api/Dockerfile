@@ -24,4 +24,4 @@ FROM build AS runtime
 ENV NODE_ENV=production
 WORKDIR /app/apps/api
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/src/main.js"]
+CMD ["sh", "-c", "node scripts/diag-db.js; npx prisma migrate deploy && exec node dist/src/main.js"]
