@@ -22,7 +22,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.routers.bilheteria-api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))
+      - traefik.http.routers.bilheteria-api.rule=Host(`${APP_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))
       - traefik.http.routers.bilheteria-api.priority=10
       - traefik.http.routers.bilheteria-api.entrypoints=https
       - traefik.http.routers.bilheteria-api.tls=true
@@ -46,7 +46,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.routers.bilheteria-web.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.bilheteria-web.rule=Host(`${APP_DOMAIN}`)
       - traefik.http.routers.bilheteria-web.priority=1
       - traefik.http.routers.bilheteria-web.entrypoints=https
       - traefik.http.routers.bilheteria-web.tls=true
