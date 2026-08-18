@@ -97,7 +97,7 @@ export function AddMovieModal({ open, onClose, existingExternalRefs, onAdded }: 
 
       {error && <MessageBar tone="danger">{error}</MessageBar>}
 
-      {busy && !results && <Spinner label="Buscando na TMDb…" />}
+      {busy && !results && <Spinner label="Buscando na TMDb…" variant="inline" />}
 
       {results && (
         <>

@@ -1,20 +1,22 @@
-export function Spinner({ label = "Carregando…" }: { label?: string }) {
+import "./spinner.css";
+
+export function Spinner({
+  label = "Carregando…",
+  variant = "page",
+}: {
+  label?: string;
+  variant?: "page" | "inline";
+}) {
   return (
-    <div role="status" style={{ display: "flex", alignItems: "center", gap: 12, padding: 32, color: "var(--color-text-muted)" }}>
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="10" cy="10" r="8" stroke="var(--color-border)" strokeWidth="2.5" />
-        <path d="M18 10a8 8 0 0 0-8-8" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round">
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from="0 10 10"
-            to="360 10 10"
-            dur="0.8s"
-            repeatCount="indefinite"
-          />
-        </path>
-      </svg>
-      <span>{label}</span>
+    <div role="status" className={`spinner spinner-${variant}`}>
+      <span className="spinner-ring-wrap">
+        <span className="spinner-glow" aria-hidden="true" />
+        <svg className="spinner-ring" width="100%" height="100%" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="8" stroke="var(--color-border)" strokeWidth="2.5" />
+          <path d="M18 10a8 8 0 0 0-8-8" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </span>
+      <span className="spinner-label">{label}</span>
     </div>
   );
 }

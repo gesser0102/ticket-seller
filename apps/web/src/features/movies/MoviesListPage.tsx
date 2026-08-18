@@ -141,7 +141,7 @@ export function MoviesListPage() {
 
             {hasMore && (
               <div ref={sentinelRef} className="movie-grid-sentinel">
-                {loadingMore && <Spinner label="Carregando mais filmes…" />}
+                {loadingMore && <Spinner label="Carregando mais filmes…" variant="inline" />}
               </div>
             )}
           </>
