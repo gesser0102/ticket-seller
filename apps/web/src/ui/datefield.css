@@ -1,0 +1,180 @@
+.date-field {
+  position: relative;
+}
+
+.date-field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-field-input-wrap input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  padding-right: 44px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.date-field-input-wrap input:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.date-field-invalid input {
+  border-color: var(--color-danger);
+}
+
+.date-field-icon-btn {
+  position: absolute;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.date-field-icon-btn:hover:not(:disabled),
+.date-field-icon-btn:focus-visible {
+  color: var(--color-accent);
+}
+
+.date-field-panel {
+  position: absolute;
+  z-index: 50;
+  bottom: calc(100% + var(--space-2));
+  left: 0;
+  width: 280px;
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-elevated);
+  animation: date-field-in var(--duration-fast) var(--ease-out);
+}
+
+@keyframes date-field-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.date-field-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.date-field-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.date-field-arrow:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.date-field-panel-selects {
+  flex: 1;
+  display: flex;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.date-field-panel-selects select {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 var(--space-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.82rem;
+}
+
+.date-field-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: var(--space-1);
+}
+
+.date-field-weekdays span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-faint);
+}
+
+.date-field-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.date-field-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.date-field-day:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+.date-field-day:disabled {
+  color: var(--color-text-faint);
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.date-field-day.selected {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 700;
+  box-shadow: var(--shadow-glow-accent);
+}

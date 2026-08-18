@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/coverage
+**/.turbo
+.git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+apps/api/.env
+docker-compose.dev.yml
+docker-compose.prod.yml

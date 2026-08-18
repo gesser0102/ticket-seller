@@ -1,0 +1,28 @@
+{
+  "name": "ticket-seller",
+  "private": true,
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.15.1",
+  "scripts": {
+    "dev:api": "pnpm --filter @ticket-seller/api start:dev",
+    "dev:web": "pnpm --filter @ticket-seller/web dev",
+    "build": "pnpm --filter @ticket-seller/shared build && pnpm --filter @ticket-seller/api build && pnpm --filter @ticket-seller/web build",
+    "prisma:migrate": "pnpm --filter @ticket-seller/api prisma:migrate",
+    "prisma:seed": "pnpm --filter @ticket-seller/api prisma:seed"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "argon2",
+      "prisma",
+      "unrs-resolver"
+    ],
+    "overrides": {
+      "deepmerge-ts": ">=8.0.0"
+    }
+  }
+}

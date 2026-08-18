@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  organizer
+  client
+  gate
+}
+
+enum MovieSource {
+  tmdb
+}
+
+enum ScreeningStatus {
+  draft
+  published
+  cancelled
+}
+
+enum SeatStatus {
+  available
+  held
+  sold
+}
+
+enum OrderStatus {
+  hold
+  paid
+  cancelled
+}
+
+enum TicketType {
+  inteira
+  meia
+}
+
+enum TicketStatus {
+  valid
+  used
+  cancelled
+}
+
+enum PaymentStatus {
+  approved
+  declined
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String?   @unique
+  passwordHash String?   @map("password_hash")
+  name         String?
+  cpf          String?   @unique
+  phone        String?
+  birthDate    DateTime? @map("birth_date")
+  role         Role
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  movies       Movie[]
+  rooms        Room[]
+  heldSeats    Seat[]   @relation("SeatHeldBy")
+  orders       Order[]
+  validatedTix Ticket[] @relation("TicketUsedByGate")
+
+  @@map("users")
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  organizerId String   @map("organizer_id")
+  organizer   User     @relation(fields: [organizerId], references: [id])
+  name        String
+  priceCents  Int      @map("price_cents")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([organizerId, name])
+  @@map("rooms")
+}
+
+model Movie {
+  id          String      @id @default(uuid())
+  organizerId String      @map("organizer_id")
+  organizer   User        @relation(fields: [organizerId], references: [id])
+  source      MovieSource @default(tmdb)
+  externalRef String      @map("external_ref")
+  title       String
+  posterUrl   String      @map("poster_url")
+  backdropUrl String?     @map("backdrop_url")
+  synopsis    String
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  screenings Screening[]
+
+  @@unique([organizerId, externalRef])
+  @@map("movies")
+}
+
+model Screening {
+  id         String          @id @default(uuid())
+  movieId    String          @map("movie_id")
+  movie      Movie           @relation(fields: [movieId], references: [id])
+  venue      String
+  startsAt   DateTime        @map("starts_at")
+  priceCents Int             @map("price_cents")
+  status     ScreeningStatus @default(draft)
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  seats   Seat[]
+  orders  Order[]
+  tickets Ticket[]
+
+  @@index([movieId, status])
+  @@map("screenings")
+}
+
+model Seat {
+  id          String     @id @default(uuid())
+  screeningId String     @map("screening_id")
+  screening   Screening  @relation(fields: [screeningId], references: [id])
+  row         String
+  number      Int
+  status      SeatStatus @default(available)
+  heldBy      String?    @map("held_by")
+  heldByUser  User?      @relation("SeatHeldBy", fields: [heldBy], references: [id])
+  holdExpires DateTime?  @map("hold_expires")
+  orderId     String?    @map("order_id")
+  order       Order?     @relation(fields: [orderId], references: [id])
+  ticketType  TicketType? @map("ticket_type")
+
+  tickets Ticket[]
+
+  @@unique([screeningId, row, number])
+  @@index([screeningId, status])
+  @@index([orderId])
+  @@map("seats")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  screeningId String      @map("screening_id")
+  screening   Screening   @relation(fields: [screeningId], references: [id])
+  clientId    String      @map("client_id")
+  client      User        @relation(fields: [clientId], references: [id])
+  status      OrderStatus @default(hold)
+  totalCents  Int         @map("total_cents")
+  holdExpires DateTime?   @map("hold_expires")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  tickets  Ticket[]
+  payments Payment[]
+  seats    Seat[]
+
+  @@index([status, holdExpires])
+  @@map("orders")
+}
+
+model Ticket {
+  id           String       @id @default(uuid())
+  orderId      String       @map("order_id")
+  order        Order        @relation(fields: [orderId], references: [id])
+  screeningId  String       @map("screening_id")
+  screening    Screening    @relation(fields: [screeningId], references: [id])
+  seatId       String       @map("seat_id")
+  seat         Seat         @relation(fields: [seatId], references: [id])
+  type         TicketType   @default(inteira)
+  token        String       @unique
+  shortCode    String       @unique @map("short_code")
+  status       TicketStatus @default(valid)
+  usedAt       DateTime?    @map("used_at")
+  usedByGateId String?      @map("used_by_gate_id")
+  usedByGate   User?        @relation("TicketUsedByGate", fields: [usedByGateId], references: [id])
+
+  @@map("tickets")
+}
+
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], name: "IDX_session_expire")
+  @@map("session")
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  orderId     String        @map("order_id")
+  order       Order         @relation(fields: [orderId], references: [id])
+  status      PaymentStatus
+  amountCents Int           @map("amount_cents")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@map("payments")
+}

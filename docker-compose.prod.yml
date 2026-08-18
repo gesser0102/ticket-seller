@@ -1,0 +1,46 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      COOKIE_SECURE: "true"
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      PORT: "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bilheteria-api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))
+      - traefik.http.routers.bilheteria-api.priority=10
+      - traefik.http.routers.bilheteria-api.entrypoints=https
+      - traefik.http.routers.bilheteria-api.tls=true
+      - traefik.http.routers.bilheteria-api.tls.certresolver=letsencrypt
+      - traefik.http.services.bilheteria-api.loadbalancer.server.port=3000
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bilheteria-web.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.bilheteria-web.priority=1
+      - traefik.http.routers.bilheteria-web.entrypoints=https
+      - traefik.http.routers.bilheteria-web.tls=true
+      - traefik.http.routers.bilheteria-web.tls.certresolver=letsencrypt
+      - traefik.http.services.bilheteria-web.loadbalancer.server.port=8080
