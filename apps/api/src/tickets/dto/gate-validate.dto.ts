@@ -1,9 +1,10 @@
 import { Matches } from 'class-validator';
-import { SHORT_CODE_PATTERN } from '../../common/utils/short-code.util';
+
+const CODE_PATTERN = /^[A-Za-z0-9_-]{3,64}$/;
 
 export class GateValidateDto {
-  @Matches(SHORT_CODE_PATTERN, {
-    message: 'Código deve estar no formato XXX-XXX.',
+  @Matches(CODE_PATTERN, {
+    message: 'Código em formato inválido.',
   })
   code!: string;
 }

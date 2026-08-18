@@ -1,8 +1,10 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./features/auth/AuthContext";
 import { RequireRole } from "./features/auth/RequireRole";
 import { ClientOnlyRoute } from "./features/auth/ClientOnlyRoute";
 import { AppShell } from "./ui/AppShell";
+import { Spinner } from "./ui/Spinner";
 import { LoginPage } from "./features/auth/LoginPage";
 import { MoviesListPage } from "./features/movies/MoviesListPage";
 import { MovieDetailPage } from "./features/movies/MovieDetailPage";
@@ -12,12 +14,13 @@ import { CheckoutPage } from "./features/checkout/CheckoutPage";
 import { MyTicketsPage } from "./features/tickets/MyTicketsPage";
 import { AccountPage } from "./features/account/AccountPage";
 import { SharedTicketPage } from "./features/tickets/SharedTicketPage";
-import { GatePage } from "./features/gate/GatePage";
 import { OrganizerLayout } from "./features/organizer/OrganizerLayout";
 import { OrganizerOverviewPage } from "./features/organizer/OrganizerOverviewPage";
 import { OrganizerMoviesPage } from "./features/organizer/OrganizerMoviesPage";
 import { OrganizerRoomsPage } from "./features/organizer/OrganizerRoomsPage";
 import { OrganizerSessionsPage } from "./features/organizer/OrganizerSessionsPage";
+
+const GatePage = lazy(() => import("./features/gate/GatePage").then((m) => ({ default: m.GatePage })));
 
 export default function App() {
   return (
@@ -73,7 +76,9 @@ export default function App() {
             path="/gate"
             element={
               <RequireRole roles={["gate"]}>
-                <GatePage />
+                <Suspense fallback={<Spinner label="Carregando…" />}>
+                  <GatePage />
+                </Suspense>
               </RequireRole>
             }
           />

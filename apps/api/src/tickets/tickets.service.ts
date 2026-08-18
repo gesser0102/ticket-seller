@@ -68,7 +68,7 @@ export class TicketsService {
     const updated = await this.prisma.$queryRaw<{ id: string }[]>`
       UPDATE tickets
          SET status = 'used', used_at = now(), used_by_gate_id = ${gateUserId}
-       WHERE short_code = ${code} AND status = 'valid'
+       WHERE (short_code = ${code} OR token = ${code}) AND status = 'valid'
       RETURNING id
     `;
 
@@ -80,8 +80,8 @@ export class TicketsService {
       return { result: 'valid', ticket: this.toGateDto(ticket) };
     }
 
-    const existing = await this.prisma.ticket.findUnique({
-      where: { shortCode: code },
+    const existing = await this.prisma.ticket.findFirst({
+      where: { OR: [{ shortCode: code }, { token: code }] },
       include: GATE_TICKET_INCLUDE,
     });
     if (!existing) {

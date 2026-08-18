@@ -6,17 +6,9 @@ Especificação original e decisões travadas: [`ESPECIFICACAO-Plataforma-Evento
 
 **Status atual:** esqueleto vivo completo, incluindo realtime (peça do Slice 2 puxada pra agora, por causa do fluxo público), um modelo de dados expandido (filme com várias sessões, não um evento = uma sessão) e painel do organizador (busca na TMDb, adiciona filme, publica sessão — item 15 do Slice 3). Ver "O que falta" abaixo pro que ainda não foi construído.
 
-## URL pública
+## Credenciais Pre Definidas
 
-Ainda não publicado — os `Dockerfile`s e o passo a passo já estão prontos e testados localmente (ver [`DEPLOY.md`](./DEPLOY.md)), falta só a instância do Coolify de verdade. Rodando localmente por enquanto — ver "Rodar local" abaixo.
-
-## Deploy
-
-Guia completo em [`DEPLOY.md`](./DEPLOY.md): `apps/api/Dockerfile`, `apps/web/Dockerfile` e `docker-compose.prod.yml` (dois serviços — API e front estático — atrás do mesmo domínio via Traefik, same-origin conforme a seção 2 da spec). Os três já foram buildados e testados localmente (build + boot real contra Postgres + login funcionando) antes de qualquer coisa ser escrita no guia.
-
-## Credenciais semeadas
-
-Cliente **não usa credencial semeada** — a conta é criada por ele mesmo no checkout. As credenciais abaixo são só para os dois papéis internos (organizador tem painel próprio em `/organizer`; portaria tem console funcional em `/gate`).
+Cliente **não usa credencial pre-definida** — a conta é criada por ele mesmo no checkout. As credenciais abaixo são só para os dois papéis internos (organizador tem painel próprio em `/organizer`; portaria tem console funcional em `/gate`).
 
 Todas com senha `senha123`.
 
@@ -29,7 +21,7 @@ O seed busca ao vivo os **10 primeiros filmes "em cartaz" da TMDb** (`GET /movie
 
 ## Rodar local
 
-Pré-requisitos: Node 22+ (ver `DECISOES-IA.md` pro motivo de não ser mais 20 — achado real montando o deploy), pnpm, Docker.
+Pré-requisitos: Node 22+, pnpm, Docker.
 
 ```bash
 # 1. instalar dependências do monorepo
@@ -138,73 +130,3 @@ Stack e decisões travadas estão detalhadas na especificação original (seçã
 - **Identidade visual clara/azul, no lugar do tema escuro original** (pedido explícito do usuário, inspirado num print de referência da Blueticket) — `styles/tokens.css` reescrito (fundo `#f4f6fb`, azul `#2563eb` como cor de destaque), busca removida do cartaz público (badges de gênero mantidas), grade de filmes virou fileira horizontal com setas (cards em formato paisagem, `backdropUrl` no lugar do pôster em retrato). Hero em destaque reconstruído em rodadas de seguimento (feedback visual direto do usuário) pra bater com a referência de verdade: cartão de imagem emoldurado + fundo azul sólido em gradiente (`hero-banner-*`, não mais foto de fundo full-bleed), sem pontos de navegação. Navbar em `var(--color-primary-strong)` (mesmo tom do início do gradiente do hero, evita a costura de cor entre os dois). Ver `DECISOES-IA.md`.
 - **Página "Minha conta"** (`/conta`, pedido do usuário) — dois formulários: dados pessoais (nome/e-mail/CPF/celular/nascimento, reaproveitando os mesmos componentes/máscaras do cadastro do checkout) e trocar senha (senha atual + nova, com barra de força). Backend novo: `UsersModule` (`GET`/`PATCH /users/me`, `PATCH /users/me/password`), guardado por `RegisteredGuard`; nenhuma migration nova, os campos já existiam no `User` desde o cadastro do checkout. Editar nome/e-mail atualiza a sessão na hora (cabeçalho/dropdown refletem sem reload). Ver `DECISOES-IA.md`.
 - **Suíte de testes automatizados** (pedido explícito do usuário: "testes completos... no back e no front") — 95 testes no backend (35 unitários com Prisma mockado + 60 e2e contra um Postgres de teste isolado, via Jest/Supertest, já configurado desde o `nest new` mas nunca usado) e 58 no frontend (Vitest + Testing Library, infra nova). Fundo nos fluxos de maior risco primeiro: concorrência real de hold de assento, RBAC entre os três papéis, pagamento (Pix/Cartão/recusa), validação de portaria, cancelamento de sessão com devolução ao estoque — não é cobertura de 100% da superfície, é profundidade onde bug custa caro. Ver `DECISOES-IA.md` pro raciocínio completo e "Rodar os testes" abaixo pro comando.
-
-## O que falta
-
-**Leitura de QR por câmera na portaria:** só digitação manual por enquanto (é o que a spec original pede pra começar).
-
-**Painel do organizador sem despublicação nem edição de filme.** Dá pra editar/excluir/cancelar sessão (ver acima) e cadastrar sala, mas não pra editar/remover um filme já adicionado.
-
-## O que não está funcionando como esperado
-
-Nada identificado no que foi construído — ver "Testes manuais rodados" abaixo. Ao todo, **11 bugs reais** foram encontrados e corrigidos ao longo do desenvolvimento (não só no que foi entregue por último) — todos documentados em detalhe no `DECISOES-IA.md`, incluindo uma condição de corrida real no login, uma sessão publicada pelo painel do organizador sem grade de assentos, uma condição de corrida na busca do modal de filme (resultados de duas buscas concorrentes podiam se sobrepor), um chip de data/horário que nascia visualmente invisível no modal de sessões em lote, um valor de backfill do código curto de portaria que nunca batia com o próprio formato que ele define, nomes de comprador vazios nos clientes semeados, e um buraco de RBAC real onde organizador/portaria conseguiam comprar ingresso com a própria conta de staff — todos pegos em rodadas de teste do próprio recurso (ou, no caso do RBAC, ao implementar a regra pedida pelo usuário), corrigidos antes de reportar como pronto.
-
-## Limitações conhecidas
-
-- **WebSocket assume uma instância** da API (sala em memória por processo). No Coolify (um container) isso é perfeito; escalar réplicas exigiria o adapter Redis do Socket.IO. Limitação conhecida e assumida, não bug — documentada na spec original (seção 7).
-- **Extensões de schema sobre a seção 4 original:** `Movie`/`Screening` no lugar de um único `Event`; `Seat.orderId` e `Seat.ticketType`; `User.email`/`passwordHash` nullable com `name`/`cpf`/`phone`/`birthDate`; `Room` (sala cadastrada pelo organizador); `ScreeningStatus.cancelled` e `GateCheckResult.cancelled` (cancelamento de sessão); `Ticket.shortCode` (código curto de portaria); `Movie.backdropUrl` (imagem 16:9 do hero rotativo). Todas descritas e justificadas em `DECISOES-IA.md`.
-- **Pagamento não é estornado de verdade no cancelamento de sessão** — `Payment.status` continua `approved` mesmo depois do `Order`/`Ticket` virarem `cancelled`. Coerente com a seção 6 original ("sem transação financeira real"): o pagamento simulado realmente foi aprovado, isso é fato histórico; quem sinaliza que a compra não vale mais é `Order.status`/`Ticket.status`, não um estorno financeiro que não existiria de verdade em produção real.
-- ~~Rate limiting não implementado~~ **Implementado.** `@nestjs/throttler`, guard global (`AppThrottlerGuard`, 120 req/min por IP como teto padrão) + limite mais apertado nas rotas sensíveis da checklist original (seção 12): login/registro (5/min), segurar assento (20/10s), pagamento (10/min), validação de portaria (30/min). Estouro responde `429` com mensagem em PT-BR, dentro do mesmo contrato `{success,message,data}`. Armazenamento em memória por processo — mesma limitação de instância única já documentada pro WebSocket (item acima), não é um problema novo.
-- **CPF/celular validados só por formato** (11 dígitos), sem checksum de CPF nem verificação de posse do celular — suficiente pro escopo de avaliação, não pra produção real.
-- **Handshake do WebSocket valida origem, não sessão** — coerente com o mapa ser público, mas é uma leitura mais fraca do "handshake valida sessão" da seção 12 original, que previa tudo autenticado.
-- **Meia-entrada não pede comprovante.** Qualquer assento pode virar "Meia" sem verificação de elegibilidade (estudante, idoso etc.) — fora de escopo pra esta avaliação, mas seria óbvio de mais numa versão real.
-
-## Testes manuais rodados
-
-**Backend (curl/script):** login/RBAC nos papéis internos, fluxo anônimo completo (hold → desmarcar → segurar de novo → reserva → tipo de ingresso com recálculo → **bloqueio de pagamento até registrar**, confirmado com 403 → registro → pagamento liberado), corrida de hold com dois clientes simultâneos, os dois caminhos de pagamento (Pix sempre aprova; Cartão com número mágico recusa), os 4 resultados da portaria, rate limit do login (6 tentativas seguidas com senha errada: as 5 primeiras respondem 401 normal, a 6ª responde 429 com `Retry-After` e mensagem em PT-BR; endpoints não relacionados continuam respondendo 200 no mesmo intervalo, confirmando que o limite é por rota, não global), cancelamento de sessão ponta a ponta (organizador publica sessão → cliente compra e paga de verdade → organizador cancela → confirmado via `psql` que `Screening`/`Order`/`Ticket` viram `cancelled` e o `Seat` volta a `available` na mesma chamada → cliente vê "Cancelado" em `GET /tickets/mine` → portaria recebe resultado "Sessão cancelada" ao tentar validar → segunda tentativa de cancelar responde 409 → sessão some de `GET /movies/:id`).
-
-**Frontend (Playwright headless):**
-- Duas sessões de navegador em paralelo: visitante A seleciona assento sem login; visitante B (sessão separada, mesma sessão de cinema) vê "reservado por outra pessoa" **em tempo real, sem reload**; A paga; B vê "vendido" em tempo real.
-- Fluxo completo ponta a ponta: cartaz → filme (elenco/gênero/duração real da TMDb) → calendário (troca de data) → mapa (seleciona 2, desmarca 1, reseleciona, testa hover) → tipo de ingresso (mistura Meia/Inteira, total dinâmico confere) → registro → pagamento por Cartão (aprovado) e por Pix (aprovado) → "Meus ingressos" mostra o tipo correto por assento.
-- Login da portaria e de cliente de retorno, isolado, pra pegar a condição de corrida descrita abaixo.
-- Painel do organizador (primeira versão, página única): login → busca "Matrix" na TMDb → adiciona filme → publica sessão → aparece no cartaz público e no calendário do filme → mapa renderiza os 150 assentos. Pegou o bug da sessão sem assento (ver `DECISOES-IA.md`).
-- Painel do organizador (dashboard reconstruído): visão geral (contadores + próximas sessões) → Filmes (modal de busca, adiciona 1 filme, sem duplicar) → Sessões em lote a partir da linha do filme (2 datas × 2 horários = 4 sessões, confirmado o preview antes de publicar) → tela Sessões filtrada mostra as 4 sessões com data/hora/preço corretos. Pegou uma condição de corrida real no modal de busca (ver `DECISOES-IA.md`), corrigida e reverificada.
-- Modal "Publicar sessões", viewport menor (1280×780, mais perto de um laptop real): adicionou 3 datas e 3 horários em sequência, confirmou os 6 chips visíveis por screenshot (não só presentes no DOM). Pegou o bug do chip que nascia abaixo da área visível do modal sem rolar (ver `DECISOES-IA.md`), corrigido e reverificado no mesmo viewport pequeno onde o problema aparecia.
-- Painel > Salas: cadastra sala nova ("Sala VIP", R$ 60,00) → aparece na lista → no modal de sessões, selecionar "Sala VIP" preenche o preço sozinho (confirmado no input, ainda editável) → publica 2 datas × 2 horários → tela Sessões confirma as 4 sessões com sala/preço corretos.
-- Editar/excluir sessão: edita sala/preço de uma sessão semeada real, confere a mudança na tabela, edita de volta pros valores originais (round-trip sem perda). Exclusão testada em dois casos — direto contra a API (`curl` autenticado): sessão com ingresso emitido responde 409 e continua intacta no banco (confirmado via `psql`, o bloqueio funciona de verdade, não só na UI); sessão descartável criada só pro teste é excluída via UI com o diálogo de confirmação nativo, some da tabela.
-- Modal de edição de sessão, select de sala: abre "Editar sessão" numa sessão de "Sala 2", confirma que o select já vem pré-selecionado (não a primeira sala da lista); cadastra sala temporária com preço bem diferente, troca a seleção → preço muda sozinho no campo.
-- Busca/filtro de filmes no cartaz: busca por "batman" mostra só o filme certo; filtro por gênero mostra só filmes daquele gênero; busca sem resultado mostra estado vazio (não a lista inteira nem tela em branco); pills de gênero continuam visíveis durante a busca.
-- Cancelar sessão (UI): depois do cancelamento via API (ver acima), a linha na tela Sessões mostra badge "cancelada" e some o botão de cancelar (só ficam editar/excluir) — confirmado por screenshot, não só pela resposta da API.
-- Código curto de portaria: fluxo completo via `curl` (organizador publica → cliente compra e paga → resposta traz `token` inalterado e `shortCode` no formato `XXX-XXX`) → portaria rejeita o token antigo por formato (400) → aceita o `shortCode` (`valid`, marca `used`) → repetir o mesmo código responde `already_used` → link público `/i/{token}` confirmado que continua funcionando sem mudança nenhuma.
-- Validador global: `POST /gate/validate` com `screeningId` no corpo responde `400` (campo não existe mais no DTO) → validação só com `{"code": "..."}` funciona pra qualquer sessão, sem seletor de evento → resposta traz filme/sessão/sala/nome do comprador corretos → segunda validação do mesmo código responde `already_used`. Sem verificação visual via Playwright nesta rodada (sem navegador disponível no ambiente) — conferido por leitura de código; recomendado um teste manual no navegador na próxima sessão.
-- Organizador/portaria não compram ingresso: os dois, logados com a própria conta, tentam `POST /seats/:id/hold` → `403 "Esta ação é exclusiva de clientes."` nos dois; portaria tenta `GET /tickets/mine` → mesmo `403`. Fluxo normal de cliente repetido ponta a ponta (segurar → reservar → pagar) confirma que a regra nova não quebrou a compra legítima. Sem verificação visual do redirecionamento do frontend (`ClientOnlyRoute`) nem do dropdown do avatar via Playwright nesta rodada (sem navegador disponível) — conferidos por leitura de código.
-- "Minha conta": fluxo completo via `curl` com uma conta de teste descartável — registro → `GET /users/me` traz CPF/celular/nascimento salvos → `PATCH /users/me` (nome/celular) → `GET /auth/me` confirma que a sessão já reflete o nome novo → tentar usar o e-mail da `cliente1` responde `409` → `PATCH /users/me/password` com senha atual errada responde `401`, com a certa troca de verdade (confirmado logando com a senha nova). Conta de teste removida do banco depois; login da `cliente1` repetido no final, sem alteração. Sem verificação visual das duas telas via Playwright nesta rodada (sem navegador disponível) — conferido por leitura de código.
-
-Sem erros novos no console em nenhum dos casos (só o 401 esperado da checagem de sessão anônima).
-
-## Estrutura de pastas
-
-Ver seção 13 da especificação original como ponto de partida. Diferenças da implementação atual:
-- `apps/api/src/movies/` + `apps/api/src/screenings/` — no lugar de um único módulo `events/`.
-- `apps/api/src/common/identity/` + `common/guards/{anonymous-identity,registered}.guard.ts` — identidade anônima, fluxo revisado.
-- `apps/api/src/tmdb/` — busca elenco/gênero/duração/classificação com cache (não estava no Slice 1 original).
-- `apps/api/src/realtime/` — gateway Socket.IO + sweeper (puxado do Slice 2).
-- `apps/web/src/features/movies/` (cartaz + detalhe com calendário) + `features/seatmap/` (mapa + painel de resumo) + `features/checkout/TicketTypePage.tsx` (tipo de ingresso, novo) + `CheckoutPage.tsx` (registro + pagamento Pix/Cartão).
-- `apps/api/src/organizer/` — painel do organizador (item 15 do Slice 3): busca TMDb paginada, cria filme, cadastra sala, publica/edita/exclui/cancela sessões.
-- `apps/web/src/features/organizer/` — dashboard do organizador: `OrganizerLayout.tsx` (sidebar + `<Outlet/>`), `OrganizerOverviewPage.tsx`, `OrganizerMoviesPage.tsx`, `OrganizerRoomsPage.tsx`, `OrganizerSessionsPage.tsx`, `AddMovieModal.tsx`, `CreateRoomModal.tsx`, `CreateSessionsModal.tsx`, `EditScreeningModal.tsx`.
-- `apps/web/src/ui/Modal.tsx` — componente de modal reusável, novo nesta rodada.
-- `apps/api/src/common/guards/app-throttler.guard.ts` — rate limit global + mensagem em PT-BR, registrado como `APP_GUARD` em `app.module.ts`.
-- `apps/web/src/ui/UserMenu.tsx` — avatar com dropdown da conta, novo nesta rodada, substitui o e-mail cru + links soltos da navbar.
-- `apps/web/src/features/auth/ClientOnlyRoute.tsx` — guarda de rota que barra organizer/gate (mas não anônimo) do mapa de assentos e checkout.
-- `apps/web/src/features/movies/HeroCarousel.tsx` — hero rotativo do cartaz com backdrop da TMDb, novo nesta rodada.
-- `apps/web/src/ui/DateField.tsx` — seletor de data em pt-BR, novo nesta rodada, substitui o `<input type="date">` nativo no cadastro do checkout.
-- `apps/web/src/lib/masks.ts` — máscaras de CPF/celular, novo nesta rodada.
-- `apps/web/src/lib/passwordStrength.ts` — validador de força de senha (feedback visual), novo nesta rodada.
-- `apps/web/src/features/tickets/TicketPreviewCard.tsx` — card compacto da grade de "Meus ingressos", novo nesta rodada.
-- `apps/web/src/ui/toast.ts` + `ToastHost.tsx` — notificação flutuante global via `CustomEvent`, novo nesta rodada.
-- `apps/api/src/users/` — `UsersModule` novo: `GET`/`PATCH /users/me` (perfil) e `PATCH /users/me/password` (troca de senha), separado do `AuthModule` (que só cobre login/registro/logout/`me` de sessão).
-- `apps/web/src/features/account/AccountPage.tsx` — tela "Minha conta" (`/conta`), novo nesta rodada.
-- `apps/api/src/**/*.spec.ts` — testes unitários colocados junto do código que testam (guards, `IdentityService`, `AuthService`, utils), novo nesta rodada.
-- `apps/api/test/` — testes e2e (`*.e2e-spec.ts`) + infra de teste nova: `global-setup.ts`/`env-setup.ts` (banco de teste isolado), `utils/create-test-app.ts` (bootstrap da app espelhando o `main.ts`), `utils/db.ts` (reset entre testes), `utils/fixtures.ts` (helpers pra criar organizador/filme/sessão/cliente registrado).
-- `apps/web/src/**/*.test.ts(x)` — testes de Vitest colocados junto do código (lib puro, `seatLayout`, guards de rota, `AuthContext`, `LoginPage`), novo nesta rodada. `apps/web/src/test/setup.ts` registra os matchers do `jest-dom` e o auto-cleanup do Testing Library entre testes.
-- `apps/api/Dockerfile` + `apps/web/Dockerfile` + `docker-compose.prod.yml` + `DEPLOY.md` — deploy de produção pro Coolify, novo nesta rodada. Ver `DEPLOY.md` pro passo a passo e `DECISOES-IA.md` pro raciocínio (por que Node 22 e não 20, por que dois serviços em vez de um).

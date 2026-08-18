@@ -220,3 +220,12 @@ export function IconEyeOff(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function IconKeyboard(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" />
+    </svg>
+  );
+}

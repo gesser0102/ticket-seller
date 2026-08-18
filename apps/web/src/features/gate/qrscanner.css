@@ -1,0 +1,63 @@
+.qr-scanner {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.qr-scanner-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: #0b1220;
+}
+
+.qr-scanner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-scanner-reticle {
+  position: absolute;
+  inset: 12%;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  background:
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / 28px 3px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 0 / 3px 28px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 0 / 28px 3px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 0 / 3px 28px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 28px 3px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 0 100% / 3px 28px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 100% / 28px 3px no-repeat,
+    linear-gradient(var(--color-accent), var(--color-accent)) 100% 100% / 3px 28px no-repeat;
+  animation: qr-reticle-pulse 1.8s var(--ease-out) infinite;
+}
+
+@keyframes qr-reticle-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.qr-scanner-message {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  max-width: 320px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-scanner-reticle {
+    animation: none;
+  }
+}

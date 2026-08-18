@@ -101,12 +101,44 @@ describe('Gate validation (e2e)', () => {
     expect(res.body.data.ticket).toBeUndefined();
   });
 
-  it('código fora do formato XXX-XXX é rejeitado com 400 antes de tocar o banco', async () => {
+  it('código inexistente fora do formato XXX-XXX (mas com caracteres válidos, ex.: token) retorna "invalid", não 400', async () => {
     const agent = await gateAgent();
     const res = await agent
       .post('/api/gate/validate')
-      .send({ code: 'not-a-code' });
+      .send({ code: 'not-a-real-token' });
+    expect(res.status).toBe(201);
+    expect(res.body.data.result).toBe('invalid');
+  });
+
+  it('código com caracteres fora do permitido (espaço) é rejeitado com 400 antes de tocar o banco', async () => {
+    const agent = await gateAgent();
+    const res = await agent
+      .post('/api/gate/validate')
+      .send({ code: 'has spaces' });
     expect(res.status).toBe(400);
+  });
+
+  it('valida pelo token do QR code, não só pelo código curto digitado', async () => {
+    const organizer = await createOrganizer(app);
+    const movie = await createMovie(app, organizer.id);
+    const screening = await createScreening(app, movie.id);
+    const seats = await createSeats(app, screening.id, ['A'], 1);
+    const { agent } = await registerClient(app, { name: 'Comprador QR' });
+    await agent.post(`/api/seats/${seats[0].id}/hold`).expect(201);
+    const orderRes = await agent
+      .post('/api/orders')
+      .send({ screeningId: screening.id, seatIds: [seats[0].id] });
+    const payRes = await agent
+      .post(`/api/orders/${orderRes.body.data.id}/pay`)
+      .send({ paymentMethod: 'pix' });
+    const token = payRes.body.data.tickets[0].token as string;
+
+    const gate = await gateAgent();
+    const res = await gate.post('/api/gate/validate').send({ code: token });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.result).toBe('valid');
+    expect(res.body.data.ticket).toMatchObject({ buyerName: 'Comprador QR' });
   });
 
   it('ingresso de sessão cancelada retorna "cancelled", distinto de "already_used"', async () => {
