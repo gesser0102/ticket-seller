@@ -16,6 +16,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    networks:
+      - default
+      - coolify
     labels:
       - traefik.enable=true
       - traefik.http.routers.bilheteria-api.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/socket.io`))
@@ -44,3 +47,8 @@ services:
       - traefik.http.routers.bilheteria-web.tls=true
       - traefik.http.routers.bilheteria-web.tls.certresolver=letsencrypt
       - traefik.http.services.bilheteria-web.loadbalancer.server.port=8080
+
+networks:
+  default: {}
+  coolify:
+    external: true
