@@ -39,6 +39,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - default
+      - coolify
     labels:
       - traefik.enable=true
       - traefik.http.routers.bilheteria-web.rule=Host(`${DOMAIN}`)
