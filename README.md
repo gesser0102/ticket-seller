@@ -98,6 +98,7 @@ Ver `.env.example`. As que realmente importam:
 - `SESSION_SECRET`: assina o cookie de sessão. Trocar em produção.
 - `COOKIE_SECURE`: `true` em produção (exige HTTPS), `false` em dev local.
 - `TMDB_API_KEY`: token de leitura v4 da TMDb. Sem ela o app funciona normal, só sem elenco, gênero e duração na página do filme, e o seed cai no catálogo fixo.
+- `SENTRY_DSN`: opcional. Sem ela configurada, o Sentry não envia nada (nem dá erro).
 
 ## Arquitetura, resumida
 

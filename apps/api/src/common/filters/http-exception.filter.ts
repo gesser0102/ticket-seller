@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { Request, Response } from 'express';
 import { AppLoggerService } from '../logger/app-logger.service';
 
@@ -26,6 +27,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       isHttpException,
       status,
     );
+
+    if (status >= 500) {
+      Sentry.captureException(exception);
+    }
 
     this.logger.error({
       userId: request.session?.user?.id,
