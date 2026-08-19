@@ -33,16 +33,9 @@ export class SweeperService {
 
   @Interval(SWEEP_INTERVAL_MS)
   async sweepExpiredOrders(): Promise<void> {
-    const expiredOrders = await this.prisma.order.findMany({
-      where: { status: 'hold', holdExpires: { lt: new Date() } },
-      select: { id: true },
-    });
-    for (const order of expiredOrders) {
-      const released = await this.orders.cancelAndReleaseSeats(order.id);
-      if (!released) continue;
-      for (const seatId of released.seatIds) {
-        this.realtime.broadcastSeatReleased(released.screeningId, { seatId });
-      }
+    const released = await this.orders.cancelExpiredHoldsAndReleaseSeats();
+    for (const { screeningId, seatId } of released) {
+      this.realtime.broadcastSeatReleased(screeningId, { seatId });
     }
   }
 }

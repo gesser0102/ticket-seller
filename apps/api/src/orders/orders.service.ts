@@ -138,6 +138,44 @@ export class OrdersService {
     });
   }
 
+  async cancelExpiredHoldsAndReleaseSeats(): Promise<
+    { screeningId: string; seatId: string }[]
+  > {
+    return this.prisma.$transaction(async (tx) => {
+      const cancelledOrders = await tx.$queryRaw<
+        { id: string; screening_id: string }[]
+      >`
+        UPDATE orders
+           SET status = 'cancelled', hold_expires = NULL
+         WHERE status = 'hold' AND hold_expires < now()
+        RETURNING id, screening_id
+      `;
+      if (cancelledOrders.length === 0) return [];
+
+      const orderIds = cancelledOrders.map((order) => order.id);
+      const releasedSeats = await tx.$queryRaw<
+        { id: string; order_id: string }[]
+      >`
+        WITH held AS (
+          SELECT id, order_id FROM seats WHERE order_id IN (${Prisma.join(orderIds)})
+        )
+        UPDATE seats
+           SET status = 'available', held_by = NULL, hold_expires = NULL, order_id = NULL, ticket_type = NULL
+          FROM held
+         WHERE seats.id = held.id
+        RETURNING seats.id, held.order_id
+      `;
+
+      const screeningByOrderId = new Map(
+        cancelledOrders.map((order) => [order.id, order.screening_id]),
+      );
+      return releasedSeats.map((seat) => ({
+        screeningId: screeningByOrderId.get(seat.order_id)!,
+        seatId: seat.id,
+      }));
+    });
+  }
+
   async getOwnOrder(orderId: string, clientId: string): Promise<OrderDto> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
