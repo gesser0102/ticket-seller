@@ -71,4 +71,15 @@ describe("buildSeatMapLayout", () => {
     const [row] = layout.rows;
     expect(row.labelY).toBe(row.seats[0].y + SEAT_SIZE / 2);
   });
+  it("no mobile aumenta o assento e o espaco visual entre assentos", () => {
+    const seats = Array.from({ length: 6 }, (_, i) => seat("A", i + 1));
+    const desktop = buildSeatMapLayout(seats);
+    const mobile = buildSeatMapLayout(seats, { mobile: true });
+
+    const desktopGap = desktop.rows[0].seats[1].x - desktop.rows[0].seats[0].x - desktop.seatSize;
+    const mobileGap = mobile.rows[0].seats[1].x - mobile.rows[0].seats[0].x - mobile.seatSize;
+
+    expect(mobile.seatSize).toBeGreaterThan(desktop.seatSize);
+    expect(mobileGap).toBeGreaterThan(desktopGap);
+  });
 });

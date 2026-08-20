@@ -72,7 +72,11 @@ export function MovieDetailPage() {
   return (
     <div>
       <div className="movie-hero">
-        <div className="movie-hero-bg" style={{ backgroundImage: `url(${movie.posterUrl})` }} aria-hidden="true" />
+        <div
+          className="movie-hero-bg"
+          style={{ backgroundImage: `url(${movie.backdropUrl ?? movie.posterUrl})` }}
+          aria-hidden="true"
+        />
         <div className="movie-hero-scrim" aria-hidden="true" />
         <div className="container movie-detail-layout">
           <img src={movie.posterUrl} alt="" className="movie-detail-poster" />

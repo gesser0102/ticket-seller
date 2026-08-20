@@ -150,6 +150,7 @@ export function CheckoutPage() {
                   className={`payment-method-option ${method === "pix" ? "active" : ""}`}
                   onClick={() => setMethod("pix")}
                   disabled={paying || expired}
+                  aria-pressed={method === "pix"}
                 >
                   <IconInstantTransfer width={20} height={20} />
                   Pix
@@ -159,6 +160,7 @@ export function CheckoutPage() {
                   className={`payment-method-option ${method === "card" ? "active" : ""}`}
                   onClick={() => setMethod("card")}
                   disabled={paying || expired}
+                  aria-pressed={method === "card"}
                 >
                   <IconCreditCard width={20} height={20} />
                   Cartão de Crédito

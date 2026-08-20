@@ -2,12 +2,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const apiTarget = process.env.API_TARGET ?? "http://localhost:3000";
+
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": { target: "http://localhost:3000", changeOrigin: false },
-      "/socket.io": { target: "http://localhost:3000", changeOrigin: false, ws: true },
+      "/api": { target: apiTarget, changeOrigin: false },
+      "/socket.io": { target: apiTarget, changeOrigin: false, ws: true },
     },
   },
   test: {

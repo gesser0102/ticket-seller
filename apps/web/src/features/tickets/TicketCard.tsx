@@ -55,7 +55,7 @@ export function TicketCard({ ticket, allowShare = true }: { ticket: TicketDto; a
 
       <div className="ticket-card-qr">
         <div className={`ticket-card-qr-inner ${used ? "ticket-card-qr-dim" : ""}`}>
-          <QRCodeSVG value={ticket.token} size={128} bgColor="transparent" fgColor="#1e293b" level="M" />
+          <QRCodeSVG value={ticket.token} size={128} bgColor="var(--color-qr-bg)" fgColor="var(--color-qr-ink)" level="M" />
           <span className="mono ticket-card-token">{ticket.shortCode}</span>
         </div>
         {ticket.status === "used" && <span className="ticket-card-ribbon">Utilizado</span>}

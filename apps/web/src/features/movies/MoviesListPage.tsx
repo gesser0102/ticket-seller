@@ -97,6 +97,7 @@ export function MoviesListPage() {
                 type="button"
                 className={`movie-genre-pill ${genre === g ? "active" : ""}`}
                 onClick={() => setGenre(g)}
+                aria-pressed={genre === g}
               >
                 {g}
               </button>

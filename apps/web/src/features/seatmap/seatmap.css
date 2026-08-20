@@ -7,23 +7,37 @@
 }
 
 .seatmap-scroll {
-  overflow-x: auto;
-  padding-block: var(--space-2);
+  overflow: hidden;
+  padding: var(--space-4);
   display: flex;
   justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(246, 195, 67, 0.08), transparent 120px),
+    var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
+.seatmap-svg {
+  flex: 0 0 auto;
+  width: min(100%, var(--seatmap-natural-width));
+  max-width: 100%;
+  height: auto;
 }
 
 .seatmap-stage-label {
   fill: var(--color-accent);
   font-family: var(--font-display);
   font-size: 13px;
-  letter-spacing: 0.25em;
+  letter-spacing: 0;
 }
 
 .seatmap-row-label {
-  fill: var(--color-text-faint);
+  fill: var(--color-text-muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .seatmap-seat-number {
@@ -59,7 +73,7 @@
   flex-wrap: wrap;
   gap: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-bg-elevated);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: 0.85rem;
@@ -84,8 +98,8 @@
 }
 
 .seatmap-legend-swatch-outline {
-  background: transparent;
-  border: 1.5px solid var(--color-text-faint);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid var(--color-accent);
 }
 
 .seatmap-legend-swatch-mine {
@@ -99,7 +113,7 @@
 }
 
 .seatmap-legend-swatch-sold {
-  background: var(--color-bg);
+  background: var(--color-bg-elevated);
   color: var(--color-text-faint);
   border: 1px solid var(--color-border);
 }
@@ -111,6 +125,9 @@
 
 .seat-selection-header {
   margin-bottom: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .seat-selection-header h1 {
@@ -131,7 +148,9 @@
 
 .seat-summary-panel {
   width: 100%;
-  background: var(--color-surface);
+  background:
+    linear-gradient(180deg, rgba(246, 195, 67, 0.08), transparent 112px),
+    var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
@@ -143,7 +162,8 @@
 .seat-summary-title {
   font-family: var(--font-display);
   font-size: 1.2rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
+  color: var(--color-accent);
 }
 
 .seat-summary-block {
@@ -157,7 +177,7 @@
 .seat-summary-label {
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   color: var(--color-text-faint);
 }
 
@@ -177,7 +197,7 @@
 }
 
 .seat-summary-date {
-  color: var(--color-info);
+  color: var(--color-accent);
   font-size: 0.85rem;
 }
 
@@ -199,7 +219,8 @@
   padding: var(--space-1) var(--space-3);
   background: var(--color-accent-soft);
   color: var(--color-accent);
-  border-radius: var(--radius-pill);
+  border: 1px solid rgba(246, 195, 67, 0.2);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.8rem;
 }
@@ -213,6 +234,36 @@
 
 .seat-summary-total strong {
   color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .seatmap-wrap {
+    gap: var(--space-3);
+  }
+
+  .seatmap-scroll {
+    justify-content: center;
+    padding: var(--space-2);
+  }
+
+  .seatmap-stage-label {
+    font-size: 15px;
+  }
+
+  .seatmap-row-label {
+    font-size: 18px;
+  }
+
+  .seatmap-svg {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seatmap-legend {
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+    font-size: 0.8rem;
+  }
 }
 
 @media (min-width: 960px) {

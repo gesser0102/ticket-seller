@@ -11,8 +11,13 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-text-muted);
-  padding-inline: var(--space-2);
+  width: fit-content;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid rgba(246, 195, 67, 0.28);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-weight: 700;
 }
 
 .checkout-payment-page {
@@ -59,10 +64,14 @@
   gap: var(--space-4);
   position: sticky;
   top: calc(var(--header-height) + var(--space-4));
+  background:
+    linear-gradient(180deg, rgba(246, 195, 67, 0.08), transparent 120px),
+    var(--color-surface);
 }
 
 .checkout-summary-title {
   font-size: 1.1rem;
+  color: var(--color-accent);
 }
 
 .checkout-summary-block {
@@ -74,8 +83,8 @@
 .checkout-summary-label {
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--color-text-faint);
 }
 
@@ -95,7 +104,7 @@
 }
 
 .checkout-summary-date {
-  color: var(--color-info);
+  color: var(--color-accent);
   font-size: 0.85rem;
 }
 
@@ -107,8 +116,10 @@
 
 .checkout-summary-seat-badge {
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-soft);
+  border: 1px solid rgba(246, 195, 67, 0.18);
+  color: var(--color-accent);
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 700;
@@ -133,6 +144,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  background: var(--color-surface);
 }
 
 .checkout-hint {
@@ -178,6 +190,9 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
+  background:
+    linear-gradient(90deg, rgba(246, 195, 67, 0.08), transparent 54%),
+    var(--color-surface);
 }
 
 .ticket-type-seat {
@@ -196,7 +211,7 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-bg-elevated);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
@@ -221,6 +236,7 @@
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: var(--color-accent-ink);
+  box-shadow: var(--shadow-glow-accent);
 }
 
 .payment-method-options {
@@ -233,7 +249,7 @@
   min-height: 56px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-bg-elevated);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--color-text);
   cursor: pointer;
   display: flex;
@@ -250,13 +266,19 @@
   border-color: var(--color-accent);
   background: var(--color-accent-soft);
   color: var(--color-accent);
+  box-shadow: var(--shadow-glow-accent);
 }
 
 .checkout-result {
   max-width: 480px;
   margin-inline: auto;
-  padding-block: var(--space-8);
+  margin-top: var(--space-8);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
 }

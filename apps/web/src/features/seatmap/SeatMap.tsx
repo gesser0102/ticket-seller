@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { SeatDto } from "@ticket-seller/shared";
-import { buildSeatMapLayout, SEAT_SIZE } from "./seatLayout";
+import { buildSeatMapLayout } from "./seatLayout";
 import { IconCheck, IconLock, IconX } from "../../ui/icons";
 import "./seatmap.css";
 
@@ -10,8 +10,24 @@ interface SeatMapProps {
   onSeatClick: (seat: SeatDto) => void;
 }
 
+const MOBILE_SEATMAP_QUERY = "(max-width: 640px)";
+
+function isMobileSeatMap(): boolean {
+  return typeof window !== "undefined" && window.matchMedia(MOBILE_SEATMAP_QUERY).matches;
+}
+
 export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
-  const layout = useMemo(() => buildSeatMapLayout(seats), [seats]);
+  const [mobileLayout, setMobileLayout] = useState(isMobileSeatMap);
+  const layout = useMemo(() => buildSeatMapLayout(seats, { mobile: mobileLayout }), [seats, mobileLayout]);
+  const svgStyle = { "--seatmap-natural-width": `${layout.width}px` } as CSSProperties;
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_SEATMAP_QUERY);
+    const handleChange = () => setMobileLayout(media.matches);
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   return (
     <div className="seatmap-wrap">
@@ -20,6 +36,8 @@ export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           width={layout.width}
           height={layout.height}
+          className="seatmap-svg"
+          style={svgStyle}
           role="group"
           aria-label="Mapa de assentos"
         >
@@ -39,7 +57,7 @@ export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
 
           {layout.rows.map((rowLayout) => (
             <g key={rowLayout.row}>
-              <text x={4} y={rowLayout.labelY + 4} className="seatmap-row-label">
+              <text x={mobileLayout ? 9 : 6} y={rowLayout.labelY + 4} className="seatmap-row-label">
                 {rowLayout.row}
               </text>
               {rowLayout.seats.map(({ seat, x, y }) => (
@@ -49,6 +67,7 @@ export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
                   x={x}
                   y={y}
                   pending={pendingSeatId === seat.id}
+                  size={layout.seatSize}
                   onClick={() => onSeatClick(seat)}
                 />
               ))}
@@ -90,12 +109,14 @@ function SeatGlyph({
   x,
   y,
   pending,
+  size,
   onClick,
 }: {
   seat: SeatDto;
   x: number;
   y: number;
   pending: boolean;
+  size: number;
   onClick: () => void;
 }) {
   const interactive = (seat.status === "available" || seat.heldByMe) && !pending;
@@ -141,10 +162,10 @@ function SeatGlyph({
       }
     >
       <g opacity={pending ? 0.5 : opacity}>
-        <path d={seatPath(SEAT_SIZE)} fill={fill} stroke={stroke} strokeWidth={1.75} />
+        <path d={seatPath(size)} fill={fill} stroke={stroke} strokeWidth={1.75} />
         <text
-          x={SEAT_SIZE / 2}
-          y={SEAT_SIZE / 2 + 3.5}
+          x={size / 2}
+          y={size / 2 + 3.5}
           textAnchor="middle"
           className="seatmap-seat-number"
           fill={seat.heldByMe ? "var(--color-accent-ink)" : "var(--color-text-muted)"}
@@ -153,8 +174,8 @@ function SeatGlyph({
         </text>
         {seat.heldByMe && (
           <IconCheck
-            x={SEAT_SIZE - 9}
-            y={SEAT_SIZE - 9}
+            x={size - 10}
+            y={size - 10}
             width={9}
             height={9}
             color="var(--color-accent-ink)"
@@ -162,10 +183,10 @@ function SeatGlyph({
           />
         )}
         {seat.status === "held" && !seat.heldByMe && (
-          <IconLock x={SEAT_SIZE - 9} y={SEAT_SIZE - 9} width={9} height={9} color="var(--color-text-faint)" />
+          <IconLock x={size - 10} y={size - 10} width={9} height={9} color="var(--color-text-faint)" />
         )}
         {seat.status === "sold" && (
-          <IconX x={SEAT_SIZE - 9} y={SEAT_SIZE - 9} width={9} height={9} color="var(--color-text-faint)" />
+          <IconX x={size - 10} y={size - 10} width={9} height={9} color="var(--color-text-faint)" />
         )}
       </g>
     </g>

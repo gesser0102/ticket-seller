@@ -24,7 +24,7 @@ describe("AppShell", () => {
   it("renderiza o logo e o conteúdo filho", () => {
     useAuthMock.mockReturnValue({ user: null, logout: vi.fn() });
     renderShell();
-    expect(screen.getByText("BILHETERIA")).toBeInTheDocument();
+    expect(screen.getByText("Primeira Fila")).toBeInTheDocument();
     expect(screen.getByText("Conteúdo da página")).toBeInTheDocument();
   });
 

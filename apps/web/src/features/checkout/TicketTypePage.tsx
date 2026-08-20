@@ -71,6 +71,7 @@ export function TicketTypePage() {
                 className={`ticket-type-option ${types[seat.id] === "inteira" ? "active" : ""}`}
                 onClick={() => setTypes((prev) => ({ ...prev, [seat.id]: "inteira" }))}
                 disabled={saving}
+                aria-pressed={types[seat.id] === "inteira"}
               >
                 Inteira
                 <span>{formatCents(fullPrice)}</span>
@@ -80,6 +81,7 @@ export function TicketTypePage() {
                 className={`ticket-type-option ${types[seat.id] === "meia" ? "active" : ""}`}
                 onClick={() => setTypes((prev) => ({ ...prev, [seat.id]: "meia" }))}
                 disabled={saving}
+                aria-pressed={types[seat.id] === "meia"}
               >
                 Meia
                 <span>{formatCents(halfPrice)}</span>

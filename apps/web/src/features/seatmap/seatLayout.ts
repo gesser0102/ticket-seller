@@ -17,18 +17,38 @@ export interface SeatMapLayout {
   width: number;
   height: number;
   stageWidth: number;
+  seatSize: number;
 }
 
 export const SEAT_SIZE = 30;
-const SEAT_GAP = 8;
-const ROW_GAP = 14;
-const ROW_LABEL_WIDTH = 32;
-const AISLE_GAP = 32;
-const CURVE_AMPLITUDE = 20;
-const STAGE_MARGIN = 96;
-const SIDE_MARGIN = 36;
+const DEFAULT_LAYOUT = {
+  seatSize: SEAT_SIZE,
+  seatGap: 8,
+  rowGap: 10,
+  rowLabelWidth: 32,
+  aisleGap: 32,
+  curveAmplitude: 12,
+  stageMargin: 64,
+  sideMargin: 36,
+};
 
-export function buildSeatMapLayout(seats: SeatDto[]): SeatMapLayout {
+const MOBILE_LAYOUT = {
+  seatSize: 36,
+  seatGap: 11,
+  rowGap: 12,
+  rowLabelWidth: 64,
+  aisleGap: 12,
+  curveAmplitude: 10,
+  stageMargin: 82,
+  sideMargin: 2,
+};
+
+export interface SeatMapLayoutOptions {
+  mobile?: boolean;
+}
+
+export function buildSeatMapLayout(seats: SeatDto[], options: SeatMapLayoutOptions = {}): SeatMapLayout {
+  const metrics = options.mobile ? MOBILE_LAYOUT : DEFAULT_LAYOUT;
   const byRow = new Map<string, SeatDto[]>();
   for (const seat of seats) {
     const list = byRow.get(seat.row) ?? [];
@@ -40,37 +60,44 @@ export function buildSeatMapLayout(seats: SeatDto[]): SeatMapLayout {
   let maxRowWidth = 0;
   const rowSeatLists = rowNames.map((row) => {
     const rowSeats = byRow.get(row)!.sort((a, b) => a.number - b.number);
-    const width = rowSeats.length * SEAT_SIZE + (rowSeats.length - 1) * SEAT_GAP + AISLE_GAP;
+    const width =
+      rowSeats.length * metrics.seatSize + (rowSeats.length - 1) * metrics.seatGap + metrics.aisleGap;
     maxRowWidth = Math.max(maxRowWidth, width);
     return { row, rowSeats };
   });
 
-  const width = maxRowWidth + ROW_LABEL_WIDTH + SIDE_MARGIN * 2;
+  const width = maxRowWidth + metrics.rowLabelWidth + metrics.sideMargin * 2;
   const centerX = width / 2;
-  let cursorY = STAGE_MARGIN;
+  let cursorY = metrics.stageMargin;
 
   const rows: SeatRowLayout[] = rowSeatLists.map(({ row, rowSeats }) => {
     const count = rowSeats.length;
     const splitIndex = Math.ceil(count / 2);
-    const rowWidth = count * SEAT_SIZE + (count - 1) * SEAT_GAP + AISLE_GAP;
+    const rowWidth = count * metrics.seatSize + (count - 1) * metrics.seatGap + metrics.aisleGap;
     let cursorX = centerX - rowWidth / 2;
 
     const positioned: PositionedSeat[] = rowSeats.map((seat, i) => {
-      if (i === splitIndex) cursorX += AISLE_GAP;
+      if (i === splitIndex) cursorX += metrics.aisleGap;
       const x = cursorX;
-      cursorX += SEAT_SIZE + SEAT_GAP;
+      cursorX += metrics.seatSize + metrics.seatGap;
 
       const mid = (count - 1) / 2;
       const normalized = mid === 0 ? 0 : (i - mid) / mid;
-      const y = cursorY + normalized * normalized * CURVE_AMPLITUDE;
+      const y = cursorY + normalized * normalized * metrics.curveAmplitude;
 
       return { seat, x, y };
     });
 
-    const labelY = positioned[0].y + SEAT_SIZE / 2;
-    cursorY += SEAT_SIZE + ROW_GAP;
+    const labelY = positioned[0].y + metrics.seatSize / 2;
+    cursorY += metrics.seatSize + metrics.rowGap;
     return { row, seats: positioned, labelY };
   });
 
-  return { rows, width, height: cursorY + 12, stageWidth: Math.min(maxRowWidth * 0.7, 480) };
+  return {
+    rows,
+    width,
+    height: cursorY + 12,
+    stageWidth: Math.min(maxRowWidth * 0.7, 480),
+    seatSize: metrics.seatSize,
+  };
 }

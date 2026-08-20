@@ -36,7 +36,7 @@
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--color-accent-soft) 0%, transparent 70%);
+  background: var(--color-accent-soft);
   animation: spinner-pulse 1.6s var(--ease-out) infinite;
 }
 
@@ -47,7 +47,7 @@
 .spinner-page .spinner-label {
   font-family: var(--font-display);
   font-size: 1.15rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   color: var(--color-text);
 }
 
