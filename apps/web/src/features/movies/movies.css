@@ -190,6 +190,11 @@
   }
 }
 
+.movie-catalog-section {
+  padding-block: var(--space-6) var(--space-8);
+  background: var(--color-bg);
+}
+
 .section-header {
   margin-bottom: var(--space-4);
 }

@@ -79,7 +79,8 @@ export function MoviesListPage() {
     <div>
       <HeroCarousel movies={movies} />
 
-      <div className="container" style={{ paddingBlock: "var(--space-6)" }}>
+      <section className="movie-catalog-section">
+        <div className="container">
         {movies.length === 0 && <h1 className="visually-hidden">Em cartaz</h1>}
 
         {movies.length > 0 && (
@@ -147,7 +148,8 @@ export function MoviesListPage() {
             )}
           </>
         )}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

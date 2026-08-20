@@ -15,9 +15,7 @@ body,
 
 body {
   margin: 0;
-  background:
-    linear-gradient(180deg, rgba(30, 27, 75, 0.28) 0%, transparent 320px),
-    linear-gradient(180deg, var(--color-bg) 0%, #0f0d15 48%, var(--color-bg) 100%);
+  background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 16px;
