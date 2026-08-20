@@ -1,29 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type {
-  GateCheckResponseDto,
-  GateTicketDto,
-  TicketDto,
-} from '@ticket-seller/shared';
+import type { GateCheckResponseDto, TicketDto } from '@ticket-seller/shared';
+import { gateTicketToDto, ticketToDto } from '../common/mappers/ticket.mapper';
 import { PrismaService } from '../prisma/prisma.service';
-
-type TicketWithRelations = {
-  id: string;
-  token: string;
-  shortCode: string;
-  type: string;
-  status: string;
-  usedAt: Date | null;
-  seat: { row: string; number: number };
-  screening: {
-    venue: string;
-    startsAt: Date;
-    movie: { title: string; posterUrl: string };
-  };
-};
-
-type GateTicketWithRelations = TicketWithRelations & {
-  order: { client: { name: string | null } };
-};
 
 const TICKET_INCLUDE = {
   seat: true,
@@ -47,7 +25,7 @@ export class TicketsService {
       include: TICKET_INCLUDE,
       orderBy: { screening: { startsAt: 'asc' } },
     });
-    return tickets.map((t) => this.toDto(t));
+    return tickets.map((ticket) => ticketToDto(ticket));
   }
 
   async getByTokenPublic(token: string): Promise<TicketDto> {
@@ -58,7 +36,7 @@ export class TicketsService {
     if (!ticket) {
       throw new NotFoundException('Ingresso não encontrado.');
     }
-    return this.toDto(ticket);
+    return ticketToDto(ticket);
   }
 
   async validateAtGate(
@@ -77,7 +55,7 @@ export class TicketsService {
         where: { id: updated[0].id },
         include: GATE_TICKET_INCLUDE,
       });
-      return { result: 'valid', ticket: this.toGateDto(ticket) };
+      return { result: 'valid', ticket: gateTicketToDto(ticket) };
     }
 
     const existing = await this.prisma.ticket.findFirst({
@@ -88,36 +66,8 @@ export class TicketsService {
       return { result: 'invalid' };
     }
     if (existing.status === 'cancelled') {
-      return { result: 'cancelled', ticket: this.toGateDto(existing) };
+      return { result: 'cancelled', ticket: gateTicketToDto(existing) };
     }
-    return { result: 'already_used', ticket: this.toGateDto(existing) };
-  }
-
-  private toDto(ticket: TicketWithRelations): TicketDto {
-    return {
-      id: ticket.id,
-      token: ticket.token,
-      shortCode: ticket.shortCode,
-      type: ticket.type as TicketDto['type'],
-      status: ticket.status as TicketDto['status'],
-      seat: {
-        row: ticket.seat.row,
-        number: ticket.seat.number,
-      },
-      screening: {
-        movieTitle: ticket.screening.movie.title,
-        moviePosterUrl: ticket.screening.movie.posterUrl,
-        venue: ticket.screening.venue,
-        startsAt: ticket.screening.startsAt.toISOString(),
-      },
-      usedAt: ticket.usedAt ? ticket.usedAt.toISOString() : null,
-    };
-  }
-
-  private toGateDto(ticket: GateTicketWithRelations): GateTicketDto {
-    return {
-      ...this.toDto(ticket),
-      buyerName: ticket.order.client.name ?? 'Comprador sem nome cadastrado',
-    };
+    return { result: 'already_used', ticket: gateTicketToDto(existing) };
   }
 }

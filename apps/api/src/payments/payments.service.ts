@@ -9,7 +9,6 @@ import { nanoid } from 'nanoid';
 import type {
   OrderDto,
   PaymentResultDto,
-  TicketDto,
   TicketType,
 } from '@ticket-seller/shared';
 import { OrdersService } from '../orders/orders.service';
@@ -17,6 +16,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import { generateShortCode } from '../common/utils/short-code.util';
 import { isUniqueConstraintError } from '../common/utils/prisma-error.util';
+import { ticketToDto } from '../common/mappers/ticket.mapper';
 
 const MAGIC_DECLINE_CARD = '4000000000000002';
 const TOKEN_LENGTH = 43;
@@ -149,7 +149,7 @@ export class PaymentsService {
       return {
         status: 'approved' as const,
         order: this.orderToDto(paidOrder),
-        tickets: tickets.map((ticket) => this.ticketToDto(ticket)),
+        tickets: tickets.map((ticket) => ticketToDto(ticket)),
         soldSeatIds: soldSeats.map((s) => s.id),
       };
     });
@@ -183,40 +183,6 @@ export class PaymentsService {
       status: order.status as OrderDto['status'],
       totalCents: order.totalCents,
       holdExpires: order.holdExpires ? order.holdExpires.toISOString() : null,
-    };
-  }
-
-  private ticketToDto(ticket: {
-    id: string;
-    token: string;
-    shortCode: string;
-    type: string;
-    status: string;
-    usedAt: Date | null;
-    seat: { row: string; number: number };
-    screening: {
-      venue: string;
-      startsAt: Date;
-      movie: { title: string; posterUrl: string };
-    };
-  }): TicketDto {
-    return {
-      id: ticket.id,
-      token: ticket.token,
-      shortCode: ticket.shortCode,
-      type: ticket.type as TicketDto['type'],
-      status: ticket.status as TicketDto['status'],
-      seat: {
-        row: ticket.seat.row,
-        number: ticket.seat.number,
-      },
-      screening: {
-        movieTitle: ticket.screening.movie.title,
-        moviePosterUrl: ticket.screening.movie.posterUrl,
-        venue: ticket.screening.venue,
-        startsAt: ticket.screening.startsAt.toISOString(),
-      },
-      usedAt: ticket.usedAt ? ticket.usedAt.toISOString() : null,
     };
   }
 }
