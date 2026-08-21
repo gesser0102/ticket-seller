@@ -23,6 +23,15 @@ const TOKEN_LENGTH = 43;
 
 export type PaymentMethod = 'pix' | 'card';
 
+type LockedOrderRow = {
+  id: string;
+  screening_id: string;
+  client_id: string;
+  status: string;
+  total_cents: number;
+  hold_expires: Date | null;
+};
+
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -64,11 +73,43 @@ export class PaymentsService {
     const approved = method === 'pix' || cardNumber !== MAGIC_DECLINE_CARD;
 
     const result = await this.prisma.$transaction(async (tx) => {
+      const [lockedOrder] = await tx.$queryRaw<LockedOrderRow[]>`
+        SELECT id, screening_id, client_id, status, total_cents, hold_expires
+          FROM orders
+         WHERE id = ${orderId}
+         FOR UPDATE
+      `;
+      if (!lockedOrder) {
+        throw new NotFoundException('Reserva nao encontrada.');
+      }
+      if (lockedOrder.client_id !== clientId) {
+        throw new ForbiddenException('Esta reserva nao pertence a voce.');
+      }
+      if (lockedOrder.status !== 'hold') {
+        throw new ConflictException('Esta reserva ja foi processada.');
+      }
+      if (lockedOrder.hold_expires && lockedOrder.hold_expires < new Date()) {
+        const releasedSeats = await tx.$queryRaw<{ id: string }[]>`
+          UPDATE seats SET status = 'available', held_by = NULL, hold_expires = NULL, order_id = NULL, ticket_type = NULL
+           WHERE order_id = ${orderId}
+          RETURNING id
+        `;
+        await tx.order.update({
+          where: { id: orderId },
+          data: { status: 'cancelled', holdExpires: null },
+        });
+        return {
+          status: 'expired' as const,
+          screeningId: lockedOrder.screening_id,
+          releasedSeatIds: releasedSeats.map((s) => s.id),
+        };
+      }
+
       await tx.payment.create({
         data: {
           orderId,
           status: approved ? 'approved' : 'declined',
-          amountCents: order.totalCents,
+          amountCents: lockedOrder.total_cents,
         },
       });
 
@@ -85,6 +126,7 @@ export class PaymentsService {
         return {
           status: 'declined' as const,
           order: this.orderToDto(cancelledOrder),
+          screeningId: lockedOrder.screening_id,
           releasedSeatIds: releasedSeats.map((s) => s.id),
         };
       }
@@ -98,7 +140,7 @@ export class PaymentsService {
       `;
 
       const MAX_SHORT_CODE_ATTEMPTS = 5;
-      const screeningId = order.screeningId;
+      const screeningId = lockedOrder.screening_id;
       const createTicketWithShortCode = async (seat: {
         id: string;
         ticket_type: string | null;
@@ -150,13 +192,23 @@ export class PaymentsService {
         status: 'approved' as const,
         order: this.orderToDto(paidOrder),
         tickets: tickets.map((ticket) => ticketToDto(ticket)),
+        screeningId: lockedOrder.screening_id,
         soldSeatIds: soldSeats.map((s) => s.id),
       };
     });
 
+    if (result.status === 'expired') {
+      for (const seatId of result.releasedSeatIds) {
+        this.realtime.broadcastSeatReleased(result.screeningId, { seatId });
+      }
+      throw new GoneException(
+        'Tempo de pagamento esgotado. Os assentos foram liberados.',
+      );
+    }
+
     if (result.status === 'approved') {
       for (const seatId of result.soldSeatIds) {
-        this.realtime.broadcastSeatSold(order.screeningId, { seatId });
+        this.realtime.broadcastSeatSold(result.screeningId, { seatId });
       }
       return {
         status: result.status,
@@ -165,7 +217,7 @@ export class PaymentsService {
       };
     }
     for (const seatId of result.releasedSeatIds) {
-      this.realtime.broadcastSeatReleased(order.screeningId, { seatId });
+      this.realtime.broadcastSeatReleased(result.screeningId, { seatId });
     }
     return { status: result.status, order: result.order };
   }

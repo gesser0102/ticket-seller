@@ -242,6 +242,35 @@ describe('Orders & Payments (e2e)', () => {
       expect(res.status).toBe(409);
     });
 
+    it('concorrencia: duas tentativas simultaneas de pagar a mesma reserva emitem ingresso uma unica vez', async () => {
+      const { agent, orderId, seatId } = await createHeldOrder();
+
+      const [resA, resB] = await Promise.all([
+        agent.post(`/api/orders/${orderId}/pay`).send({ paymentMethod: 'pix' }),
+        agent.post(`/api/orders/${orderId}/pay`).send({ paymentMethod: 'pix' }),
+      ]);
+
+      const statuses = [resA.status, resB.status].sort();
+      expect(statuses).toEqual([201, 409]);
+
+      const approved = [resA, resB].find((res) => res.status === 201)!;
+      expect(approved.body.data.status).toBe('approved');
+      expect(approved.body.data.tickets).toHaveLength(1);
+
+      const prisma = prismaOf(app);
+      const [tickets, payments, seatInDb, orderInDb] = await Promise.all([
+        prisma.ticket.findMany({ where: { orderId } }),
+        prisma.payment.findMany({ where: { orderId } }),
+        prisma.seat.findUniqueOrThrow({ where: { id: seatId } }),
+        prisma.order.findUniqueOrThrow({ where: { id: orderId } }),
+      ]);
+
+      expect(tickets).toHaveLength(1);
+      expect(payments).toHaveLength(1);
+      expect(seatInDb.status).toBe('sold');
+      expect(orderInDb.status).toBe('paid');
+    });
+
     it('403 ao tentar pagar a reserva de outro cliente', async () => {
       const { orderId } = await createHeldOrder();
       const { agent: stranger } = await registerClient(app);

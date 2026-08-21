@@ -13,7 +13,11 @@ interface SeatMapProps {
 const MOBILE_SEATMAP_QUERY = "(max-width: 640px)";
 
 function isMobileSeatMap(): boolean {
-  return typeof window !== "undefined" && window.matchMedia(MOBILE_SEATMAP_QUERY).matches;
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(MOBILE_SEATMAP_QUERY).matches
+  );
 }
 
 export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
@@ -22,6 +26,7 @@ export function SeatMap({ seats, pendingSeatId, onSeatClick }: SeatMapProps) {
   const svgStyle = { "--seatmap-natural-width": `${layout.width}px` } as CSSProperties;
 
   useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
     const media = window.matchMedia(MOBILE_SEATMAP_QUERY);
     const handleChange = () => setMobileLayout(media.matches);
     handleChange();

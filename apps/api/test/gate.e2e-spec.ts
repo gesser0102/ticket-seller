@@ -90,7 +90,28 @@ describe('Gate validation (e2e)', () => {
     expect(res.body.data.result).toBe('already_used');
   });
 
-  it('código inexistente (mas com formato válido) retorna "invalid"', async () => {
+  it('concorrencia: duas validacoes simultaneas do mesmo ingresso liberam entrada uma unica vez', async () => {
+    const { shortCode } = await purchaseTicket();
+    const agent = await gateAgent();
+
+    const [resA, resB] = await Promise.all([
+      agent.post('/api/gate/validate').send({ code: shortCode }),
+      agent.post('/api/gate/validate').send({ code: shortCode }),
+    ]);
+
+    expect([resA.status, resB.status]).toEqual([201, 201]);
+    const results = [resA.body.data.result, resB.body.data.result].sort();
+    expect(results).toEqual(['already_used', 'valid']);
+
+    const prisma = prismaOf(app);
+    const ticket = await prisma.ticket.findUniqueOrThrow({
+      where: { shortCode },
+    });
+    expect(ticket.status).toBe('used');
+    expect(ticket.usedAt).not.toBeNull();
+  });
+
+  it('codigo inexistente com formato valido retorna "invalid"', async () => {
     const agent = await gateAgent();
     const res = await agent
       .post('/api/gate/validate')
